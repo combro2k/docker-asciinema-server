@@ -1,4 +1,4 @@
-FROM combro2k/debian-debootstrap:8
+FROM combro2k/ubuntu-debootstrap:14.04
  
 RUN export DEBIAN_FRONTEND=noninteractive && \
     apt-get update && \
