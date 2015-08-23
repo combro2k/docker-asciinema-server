@@ -11,7 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     /bin/bash -l -c "rvm install 2.1" && \
     /bin/bash -l -c "echo 'gem: --no-ri --no-rdoc' > ~/.gemrc" && \
     /bin/bash -l -c "gem install bundler --no-ri --no-rdoc" && \
-    git clone clone git://github.com/asciinema/asciinema.org.git /home/app/asciinema && \
+    git clone git://github.com/asciinema/asciinema.org.git /home/app/asciinema && \
     git clone git://people.freedesktop.org/~dvdhrm/libtsm /home/app/libtsm && \
     cd /home/app/libtsm && git checkout libtsm-3 && \
     (test -f ./configure || NOCONFIGURE=1 ./autogen.sh) && \
