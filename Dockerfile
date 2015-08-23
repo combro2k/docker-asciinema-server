@@ -8,7 +8,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     useradd -ms /bin/bash app && \
     gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3 && \
     /bin/bash -l -c "curl -L get.rvm.io | bash -s stable --rails" && \
-    /bin/basg -l -c "rvm install 2.1" && \
+    /bin/bash -l -c "rvm install 2.1" && \
     /bin/bash -l -c "echo 'gem: --no-ri --no-rdoc' > ~/.gemrc" && \
     /bin/bash -l -c "gem install bundler --no-ri --no-rdoc" && \
     git clone clone git://github.com/asciinema/asciinema.org.git /home/app/asciinema && \
