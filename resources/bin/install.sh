@@ -13,10 +13,6 @@ e () {
 
 trap e ERR
 
-
-SCRIPT="/usr/local/bin/install.sh"
-APP_HOME="/home/asciinema"
-APP_USER="asciinema"
 ASCIICEMA_SERVER="${APP_HOME}/asciinema.org"
 DEBIAN_FRONTEND=noninteractive
 TMP_DIR="$(mktemp -u -d -t tsmXXXXXX)"
