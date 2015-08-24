@@ -1,10 +1,23 @@
 #!/bin/bash
 set -e
 
-SCRIPT="$(readlink --canonicalize --no-newline $BASH_SOURCE)"
+e () {
+    errcode=$? # save the exit code as the first thing done in the trap function
+    echo "error $errorcode"
+    echo "the command executing at the time of the error was"
+    echo "$BASH_COMMAND"
+    echo "on line ${BASH_LINENO[0]}"
+    tail -n 25 ${INSTALL_LOG}
+    exit 1  # or use some other value or do return instead
+}
+
+trap e ERR
+
+
+SCRIPT="/usr/local/bin/install.sh"
 APP_HOME="/home/asciinema"
 APP_USER="asciinema"
-RUN_AS_APP_USER="su - ${APP_USER} -c ${SCRIPT}"
+RUN_AS_APP_USER="su - ${APP_USER} -c '${SCRIPT}' --"
 ASCIICEMA_SERVER="${APP_HOME}/asciinema.org"
 DEBIAN_FRONTEND=noninteractive
 TMP_DIR="$(mktemp -u -d -t tsmXXXXXX)"
