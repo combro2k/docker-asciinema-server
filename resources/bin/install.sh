@@ -50,16 +50,15 @@ compile_libtsm() {
 
     echo "Compiling libtsm-3"
     git clone -q git://people.freedesktop.org/~dvdhrm/libtsm "${TMP_DIR}"
-    cd "${TMP_DIR}"
+    pushd "${TMP_DIR}"
 
     git checkout libtsm-3
     test -f ./configure || NOCONFIGURE=1 ./autogen.sh
-
     ./configure --prefix=/usr/local
     make
     make install
+    popd
 
-    cd "${APP_HOME}"
     rm -fr "${TMP_DIR}"
 }
 
@@ -132,6 +131,10 @@ build() {
     compile_libtsm
 
     ${SU_APP_USER} /usr/local/bin/install.sh install_ruby_rvm install_asciinema
+
+    echo 'Cleanup APT...'
+	apt-get clean
+	rm -fr /var/lib/apt
 }
 
 if [ -z "${@}" ]
