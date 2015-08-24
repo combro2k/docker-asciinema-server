@@ -8,17 +8,10 @@ ENV SCRIPT="/usr/local/bin/install.sh" \
 ADD resources/bin/* /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/* && \
-    bash ${SCRIPT} \
-    install_custom_repo \
-    install_dependencies \
-    compile_libtsm \
-    create_user
+    bash ${SCRIPT} install_custom_repo install_dependencies compile_libtsm create_user
 
 USER ${APP_USER}
 
-RUN bash ${SCRIPT} \
-    install_ruby_rvm \
-    install_asciinema \
-    configure_asciinema
+RUN bash ${SCRIPT} install_ruby_rvm install_asciinema configure_asciinema
 
 CMD ['/usr/local/bin/run']
