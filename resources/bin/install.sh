@@ -149,23 +149,6 @@ configure_asciinema() {
     return 0
 }
 
-build() {
-    [[ "${UID}" -ne 0 ]] && echo "Need to be root to run this command!" && return 1
-
-    install_custom_repo
-    install_dependencies
-    compile_libtsm
-
-    create_user
-EOF
-
-    echo 'Cleanup APT...'
-    apt-get clean
-    rm -fr /var/lib/apt
-    
-    return 0
-}
-
 if [ -z "${@}" ]
 then
     echo "No parameters given!"
