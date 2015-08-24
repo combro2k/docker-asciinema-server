@@ -17,7 +17,6 @@ trap e ERR
 SCRIPT="/usr/local/bin/install.sh"
 APP_HOME="/home/asciinema"
 APP_USER="asciinema"
-RUN_AS_APP_USER="su - ${APP_USER} -c '${SCRIPT}' --"
 ASCIICEMA_SERVER="${APP_HOME}/asciinema.org"
 DEBIAN_FRONTEND=noninteractive
 TMP_DIR="$(mktemp -u -d -t tsmXXXXXX)"
@@ -157,9 +156,11 @@ build() {
     compile_libtsm
 
     create_user
-    ${RUN_AS_APP_USER} -- install_ruby_rvm
-    ${RUN_AS_APP_USER} -- install_asciinema
-    ${RUN_AS_APP_USER} -- configure_asciinema
+    su - ${APP_USER}  <<'EOF'
+    ${SCRIPT} install_ruby_rvm
+    ${SCRIPT} install_asciinema
+    ${SCRIPT} configure_asciinema
+    EOF
 
     echo 'Cleanup APT...'
     apt-get clean
