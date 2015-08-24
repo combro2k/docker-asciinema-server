@@ -53,6 +53,7 @@ create_user(){
 
     echo "Creating user ${APP_USER}..."
     useradd -d "${APP_HOME}" -m -s "/bin/bash" "${APP_USER}"
+    echo "${APP_USER} = NOPASSWD: ALL" > "/etc/sudoers.d/{APP_USER}"
 }
 
 compile_libtsm() {
@@ -156,10 +157,6 @@ build() {
     compile_libtsm
 
     create_user
-    su - ${APP_USER}  <<'EOF'
-    ${SCRIPT} install_ruby_rvm
-    ${SCRIPT} install_asciinema
-    ${SCRIPT} configure_asciinema
 EOF
 
     echo 'Cleanup APT...'
