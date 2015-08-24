@@ -11,7 +11,7 @@ RUN /usr/local/bin/install.sh \
 
 USER app
 
-RUB /usr/local/bin/install.sh \
+RUN /usr/local/bin/install.sh \
     install_ruby_rvm \
     install_asciinema \
     configure_asciinema
