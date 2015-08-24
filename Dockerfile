@@ -7,7 +7,7 @@ ENV SCRIPT="/usr/local/bin/install.sh" \
 
 ADD resources/bin/* /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/* \
+RUN chmod +x /usr/local/bin/* && \
     bash ${SCRIPT} \
     install_custom_repo \
     install_dependencies \
