@@ -157,9 +157,9 @@ build() {
     compile_libtsm
 
     create_user
-    ${RUN_AS_APP_USER} install_ruby_rvm
-    ${RUN_AS_APP_USER} install_asciinema
-    ${RUN_AS_APP_USER} configure_asciinema
+    ${RUN_AS_APP_USER} -- install_ruby_rvm
+    ${RUN_AS_APP_USER} -- install_asciinema
+    ${RUN_AS_APP_USER} -- configure_asciinema
 
     echo 'Cleanup APT...'
     apt-get clean
