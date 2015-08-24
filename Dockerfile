@@ -11,7 +11,8 @@ RUN chmod +x /usr/local/bin/* && \
     bash ${SCRIPT} \
     install_custom_repo \
     install_dependencies \
-    compile_libtsm
+    compile_libtsm \
+    create_user
 
 USER ${APP_USER}
 
