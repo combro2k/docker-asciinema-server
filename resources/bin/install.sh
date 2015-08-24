@@ -7,7 +7,7 @@ e () {
     echo "the command executing at the time of the error was"
     echo "$BASH_COMMAND"
     echo "on line ${BASH_LINENO[0]}"
-    tail -n 25 ${INSTALL_LOG}
+    #tail -n 25 ${INSTALL_LOG}
     exit 1  # or use some other value or do return instead
 }
 
@@ -162,10 +162,10 @@ build() {
     ${RUN_AS_APP_USER} configure_asciinema
 
     echo 'Cleanup APT...'
-	apt-get clean
-	rm -fr /var/lib/apt
-
-	return 0
+    apt-get clean
+    rm -fr /var/lib/apt
+    
+    return 0
 }
 
 if [ -z "${@}" ]
