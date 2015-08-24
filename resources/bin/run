@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+[[ "${USER}" != "${APP_USER}" ]] && echo "Need to be ${APP_USER} to run this command" && exit 1
+
+/usr/local/bin/install.sh configure_asciinema
