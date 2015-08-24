@@ -1,39 +1,38 @@
 #!/bin/bash
-
 set -e
 
-export \
-    APP_HOME="/home/asciinema" \
-    APP_USER="asciinema" \
-    SU_APP_USER="su ${APP_USER} - -c" \
-    ASCIICEMA_SERVER="${APP_HOME}/asciinema.org" \
-    DEBIAN_FRONTEND=noninteractive \
-    TMP_DIR="$(mktemp -u -d -t tsmXXXXXX)"
-    PACKAGES=(
-        'autoconf'
-        'automake'
-        'bison'
-        'curl'
-        'g++'
-        'gawk'
-        'gcc'
-        'git'
-        'libc6-dev'
-        'libffi-dev'
-        'libgdbm-dev'
-        'libncurses5-dev'
-        'libreadline6-dev'
-        'libsqlite3-dev'
-        'libssl-dev'
-        'libtool'
-        'libyaml-dev'
-        'make'
-        'patch'
-        'phantomjs'
-        'pkg-config'
-        'sqlite3'
-        'sudo'
-        'zlib1g-dev'
+SCRIPT="$(readlink --canonicalize --no-newline $BASH_SOURCE)"
+APP_HOME="/home/asciinema"
+APP_USER="asciinema"
+RUN_AS_APP_USER="su - ${APP_USER} -c ${SCRIPT}"
+ASCIICEMA_SERVER="${APP_HOME}/asciinema.org"
+DEBIAN_FRONTEND=noninteractive
+TMP_DIR="$(mktemp -u -d -t tsmXXXXXX)"
+PACKAGES=(
+    'autoconf'
+    'automake'
+    'bison'
+    'curl'
+    'g++'
+    'gawk'
+    'gcc'
+    'git'
+    'libc6-dev'
+    'libffi-dev'
+    'libgdbm-dev'
+    'libncurses5-dev'
+    'libreadline6-dev'
+    'libsqlite3-dev'
+    'libssl-dev'
+    'libtool'
+    'libyaml-dev'
+    'make'
+    'patch'
+    'phantomjs'
+    'pkg-config'
+    'sqlite3'
+    'sudo'
+    'zlib1g-dev'
 )
 
 create_user(){
@@ -45,7 +44,7 @@ create_user(){
 }
 
 compile_libtsm() {
-    [ -e "/usr/local/lib/libtsm.a" ] && return 1
+    [ -e "/usr/local/lib/libtsm.a" ] && return 0
     [[ "${UID}" -ne 0 ]] && echo "Need to be root to run this command!" && return 1;
 
     echo "Compiling libtsm-3"
@@ -60,6 +59,8 @@ compile_libtsm() {
     popd
 
     rm -fr "${TMP_DIR}"
+
+    return 0
 }
 
 install_custom_repo()
@@ -70,17 +71,21 @@ install_custom_repo()
 
     add-apt-repository -y ppa:tanguy-patte/phantomjs
     apt-get update
+
+    return 0
 }
 
 install_dependencies() {
     [[ "${UID}" -ne 0 ]] && echo "Need to be root to run this command!" && return 1;
 
     apt-get install -yq ${PACKAGES[@]}
+
+    return 0
 }
 
 install_ruby_rvm() {
     [ -d "${APP_HOME}/.rvm/" ] && return 1
-    [[ "${USER}" != "${APP_USER}" ]] && echo "Need to be ${APP_USER} to run this command" && return 1;
+    [[ "${UID}" -ne 0 ]] && echo "Need to be root to run this command!" && return 1;
 
     echo "Installing RVM ruby..."
     gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
@@ -88,6 +93,8 @@ install_ruby_rvm() {
     rvm install 2.1
     echo 'gem: --no-ri --no-rdoc' > ${APP_HOME}/.gemrc
     gem install bundler rake --no-ri --no-rdoc
+
+    return 0
 }
 
 install_asciinema() {
@@ -96,6 +103,8 @@ install_asciinema() {
 
     echo "Checking out asciinema.org..."
     git -q clone git://github.com/asciinema/asciinema.org.git "${ASCIICEMA_SERVER}"
+
+    return 0
 }
 
 chown_asciinema() {
@@ -103,6 +112,8 @@ chown_asciinema() {
 
     echo "Setting the correct user rights on ${ASCIICEMA_SERVER}..."
     chown -R "${APP_USER}:${APP_USER}" "${ASCIICEMA_SERVER}"
+
+    return 0
 }
 
 configure_asciinema() {
@@ -121,20 +132,27 @@ configure_asciinema() {
 
     mkdir -p "${ASCIICEMA_SERVER}/tmp"
     touch "${ASCIICEMA_SERVER}/tmp/restart.txt"
+
+    return 0
 }
 
 build() {
-    [[ "${UID}" -ne 0 ]] && echo "Need to be root to run this command!" && return 1;
+    [[ "${UID}" -ne 0 ]] && echo "Need to be root to run this command!" && return 1
 
     install_custom_repo
     install_dependencies
     compile_libtsm
 
-    ${SU_APP_USER} /usr/local/bin/install.sh install_ruby_rvm install_asciinema
+    create_user
+    ${RUN_AS_APP_USER} install_ruby_rvm
+    ${RUN_AS_APP_USER} install_asciinema
+    ${RUN_AS_APP_USER} configure_asciinema
 
     echo 'Cleanup APT...'
 	apt-get clean
 	rm -fr /var/lib/apt
+
+	return 0
 }
 
 if [ -z "${@}" ]
@@ -149,8 +167,8 @@ then
 else
     for a in ${@}
     do
-        ${a}
+        ${a} || exit 1
     done
 fi
 
-
+exit 0
