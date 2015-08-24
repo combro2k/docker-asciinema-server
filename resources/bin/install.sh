@@ -160,7 +160,7 @@ build() {
     ${SCRIPT} install_ruby_rvm
     ${SCRIPT} install_asciinema
     ${SCRIPT} configure_asciinema
-    EOF
+EOF
 
     echo 'Cleanup APT...'
     apt-get clean
