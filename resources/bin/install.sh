@@ -145,7 +145,7 @@ configure_asciinema() {
     return 0
 }
 
-if [ -z "${@}" ]
+if [ $# -eq 0 ]
 then
     echo "No parameters given!"
     echo "Available functions:"
