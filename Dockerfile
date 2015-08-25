@@ -10,7 +10,7 @@ ADD resources/bin/* /usr/local/bin/
 RUN chmod +x /usr/local/bin/* && \
     bash ${SCRIPT} install_custom_repo install_dependencies compile_libtsm create_user
 
-USER ${APP_USER}
+USER asciinema
 
 RUN bash ${SCRIPT} install_ruby_rvm install_asciinema configure_asciinema
 
