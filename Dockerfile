@@ -12,6 +12,6 @@ RUN chmod +x /usr/local/bin/* && \
 
 USER asciinema
 
-RUN bash ${SCRIPT} install_ruby_rvm install_asciinema configure_asciinema
+RUN /usr/bash -l -c ${SCRIPT} install_ruby_rvm install_asciinema configure_asciinema
 
 CMD ['/usr/local/bin/run']
