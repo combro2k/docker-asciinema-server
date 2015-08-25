@@ -5,7 +5,7 @@ e () {
 	echo "error $errorcode"
 	echo "the command executing at the time of the error was"
 	echo "$BASH_COMMAND"
-	echo "on line ${BASH_LINENO[0]}"
+#	echo "on line ${BASH_LINENO[0]}"
 	exit 1
 }
 
@@ -36,6 +36,10 @@ export PACKAGES=(
 	'libssl-dev'
 	'libtool'
 	'libyaml-dev'
+	'libgmp-dev'
+	'libjson-c-dev'
+	'libxml2-dev'
+	'libxslt-dev'
 	'make'
 	'patch'
 	'phantomjs'
