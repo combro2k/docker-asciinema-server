@@ -94,7 +94,7 @@ install_dependencies() {
 
 install_ruby_rvm() {
     [ -d "${APP_HOME}/.rvm/" ] && return 1
-    [[ "${UID}" -ne 0 ]] && echo "Need to be root to run this command!" && return 1;
+    [[ "${USER}" != "${APP_USER}" ]] && echo "Need to be ${APP_USER} to run this command" && return 1;
 
     echo "Installing RVM ruby..."
     gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
