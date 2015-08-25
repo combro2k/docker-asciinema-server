@@ -3,7 +3,7 @@ MAINTAINER Martijn van Maurik <docker@vmaurik.nl>
 
 ADD resources/bin/* /usr/local/bin/
 
-RUN chmod +x /usr/local/bin/* && /bin/bash -l -c "/usr/local/bin/install.sh build"
+RUN chmod +x /usr/local/bin/* && /bin/bash -l -c "/usr/local/bin/setup.sh build"
 
 USER asciinema
 
