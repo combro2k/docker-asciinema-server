@@ -104,7 +104,7 @@ install_dependencies() {
 
         rvm install 2.2.2 && rvm use 2.2.2
         echo 'gem: --no-document' | tee /root/.gemrc ${APP_HOME}/.gemrc > /dev/null 2>&1
-        gem update --system && gem install bundler
+        gem install bundler && gem update --system
     fi
 
     id -u "${APP_USER}" >/dev/null 2>&1
