@@ -107,7 +107,7 @@ install_dependencies() {
         gem install bundler && gem update --system
     fi
 
-    id -u "${APP_USER}" >/dev/null 2>&1
+    id -u "${APP_USER}"
     if [ $? -ne 0 ]
     then
         echo "Creating user ${APP_USER}..."
