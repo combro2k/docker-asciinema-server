@@ -25,16 +25,16 @@ PACKAGES=(
 	'libsqlite3-dev'
 	'libssl-dev'
 	'libtool'
-	'libyaml-dev'
 	'libgmp-dev'
 	'libpq-dev'
 	'libjson-c-dev'
 	'libxml2-dev'
 	'libxslt-dev'
+	'libyaml-dev'
 	'make'
 	'patch'
 	'phantomjs'
-    'libpq-dev'
+	'postgresql'
 	'sqlite3'
 	'sudo'
 	'zlib1g-dev'
@@ -56,7 +56,6 @@ pre_install() {
 
 	add-apt-repository -y ppa:tanguy-patte/phantomjs
 	apt-get update -yq
-
 	apt-get install -yq ${PACKAGES[@]}
 
 	if [ ! -f "/usr/local/lib/libtsm.a" ]
