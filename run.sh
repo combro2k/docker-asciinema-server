@@ -1,2 +1,2 @@
 #!/bin/bash
-docker run -d asciinema --name asciinema-server combro2k/asciinema-server
+docker run -ti --rm --name asciinema-server combro2k/asciinema-server ${@}

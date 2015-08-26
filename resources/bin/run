@@ -7,6 +7,4 @@ then
     return 1
 fi
 
-/usr/local/bin/install.sh configure_asciinema
-
-start
+/usr/bin/supervisord -c /etc/supervisor/supervisord.conf

@@ -4,9 +4,17 @@ set -TEa
 
 trap '{ echo -e "error ${?}\nthe command executing at the time of the error was\n${BASH_COMMAND}\non line ${BASH_LINENO[0]}" && tail -n 10 ${INSTALL_LOG} && exit $? }' ERR
 
+DEBIAN_FRONTEND="noninteractive"
+INSTALL_LOG="/var/log/build.log"
+
+APP_USER="asciinema"
+APP_HOME="/home/${APP_USER}"
+ASCIINEMA_SERVER="/${APP_HOME}/server"
+RAILS_ENV="production"
+
 CUR_USER="$(id -un)"
 CUR_UID="$(id -u)"
-DEBIAN_FRONTEND="noninteractive"
+
 TMP_DIR="$(mktemp -u -d -t tsmXXXXXX) "
 PACKAGES=(
 	'autoconf'
@@ -32,11 +40,14 @@ PACKAGES=(
 	'libxslt-dev'
 	'libyaml-dev'
 	'make'
+	'nodejs'
 	'patch'
 	'phantomjs'
 	'postgresql'
+	'rsyslog'
 	'sqlite3'
 	'sudo'
+	'supervisor'
 	'zlib1g-dev'
 )
 
@@ -76,6 +87,9 @@ pre_install() {
 		echo "Creating user ${APP_USER}..."
 		useradd -d "${APP_HOME}" -m -s "/bin/bash" "${APP_USER}"
 		echo "${APP_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${APP_USER}
+
+		echo "Creating ${APP_USER} as superuser for postgresql"
+		sudo -u postgres -H createuser asciinema -s
 	fi
 
 	if [ ! -d "/usr/local/rvm" ]
@@ -84,12 +98,12 @@ pre_install() {
 		gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3 2>&1 > /dev/null
 		curl --silent -L https://get.rvm.io | bash
 
-		if [ -f "/etc/profile.d/rvm.sh" ]
+		if [ -f "/usr/local/rvm/scripts/rvm" ]
 		then
-			source /etc/profile.d/rvm.sh # load rvm if file exist
+			source /usr/local/rvm/scripts/rvm
 		fi
 
-		rvm install 2.1.7 && rvm use 2.1.7
+		rvm install 2.1.7 && rvm --default use 2.1.7 && rvm alias create default 2.1.7
 		echo 'gem: --no-document' | tee ${APP_HOME}/.gemrc
 		gem install bundler
 	fi
@@ -154,14 +168,23 @@ configure_asciinema() {
 		fi
 	fi
 
+
 	if [ ! -d "/data" ] || [ ! -d "/data/config" ]
 	then
 		sudo mkdir -p /data/config
+		sudo chown -R "${APP_USER}:${APP_USER}" /data
 	fi
 
 	if [ ! -e "/data/config/database.yml" ]
 	then
-		echo "Copying base skeleton" && cp "${ASCIINEMA_SERVER}/config/database.yml.example" "/data/config/database.yml"
+		echo "Creating base skeleton"
+
+		echo -e "production:" | tee /data/config/database.yml
+		echo -e " tadapter: postgresql" | tee -a /data/config/database.yml
+		echo -e " encoding: unicode" | tee -a /data/config/database.yml
+		echo -e " database: asciinema" | tee -a /data/config/database.yml
+		echo -e " pool: 25" | tee -a /data/config/database.yml
+		echo -e " min_messages: WARNING" | tee -a /data/config/database.yml
 	fi
 
 	if [ ! -L "${ASCIINEMA_SERVER}/config/database.yml" ]
@@ -174,16 +197,17 @@ configure_asciinema() {
 		rm -f "${ASCIINEMA_SERVER}/log/*"
 	fi
 
-	if [ -f "/etc/profile.d/rvm.sh" ]
+	if [ -f "/usr/local/rvm/scripts/rvm" ]
 	then
-		source /etc/profile.d/rvm.sh # load rvm if file exist
+		source /usr/local/rvm/scripts/rvm
 	fi
 
 	if [ -d "${ASCIINEMA_SERVER}" ]
 	then
 		pushd "${ASCIINEMA_SERVER}"
 		bundle install
-		bundle exec rake db:setup
+		createdb -E unicode --template=template0
+		bundle exec rake --silent --no-deprecation-warnings db:setup
 		mkdir -p "./tmp"
 		touch "./tmp/restart.txt"
 		popd
