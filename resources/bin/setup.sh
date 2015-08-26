@@ -15,7 +15,6 @@ RAILS_ENV="production"
 CUR_USER="$(id -un)"
 CUR_UID="$(id -u)"
 
-TMP_DIR="$(mktemp -u -d -t tsmXXXXXX) "
 PACKAGES=(
 	'autoconf'
 	'automake'
@@ -72,17 +71,17 @@ pre_install() {
 	if [ ! -f "/usr/local/lib/libtsm.a" ]
 	then
 		echo "Compiling libtsm-3"
-		mkdir -p "${TMP_DIR}"
-		pushd "${TMP_DIR}"
+		mkdir -p "/tmp/libtsm"
+		pushd "/tmp/libtsm"
 		curl --silent -L http://freedesktop.org/software/kmscon/releases/libtsm-3.tar.xz | tar Jx --strip-components=1
 		[ ! -f "./configure" ] && NOCONFIGURE=1 ./autogen.sh
 		./configure --prefix=/usr/local && make && make install
 		popd
 
-		rm -fr "${TMP_DIR}"
+		rm -fr "/tmp/libtsm"
 	fi
 
-        service postgresql start
+	service postgresql start
 	if [ ! -d "${APP_USER}" ]
 	then
 		echo "Creating user ${APP_USER}..."
@@ -92,7 +91,7 @@ pre_install() {
 		echo "Creating ${APP_USER} as superuser for postgresql"
 		sudo -u postgres -H createuser asciinema -s
 	fi
-        service postgresql stop
+	service postgresql stop
 
 	if [ ! -d "/usr/local/rvm" ]
 	then
@@ -144,15 +143,13 @@ install_asciinema() {
 	then
 		echo "Clone asciinema.org..."
 		git clone https://github.com/asciinema/asciinema.org.git "${ASCIINEMA_SERVER}"
-    else
-        pushd "${ASCIINEMA_SERVER}"
-        git stash
-        git pull
-        git stash apply
-        popd
+	else
+		pushd "${ASCIINEMA_SERVER}"
+		git stash
+		git pull
+		git stash apply
+		popd
 	fi
-
-	configure_asciinema
 
 	return 0
 }
@@ -226,6 +223,7 @@ build() {
 
 	tasks=(
 		'pre_install'
+		'install_asciinema'
 	)
 
 	for task in ${tasks[@]}
@@ -233,8 +231,6 @@ build() {
 		echo "Running build task ${task}..."
 		${task} | tee -a "${INSTALL_LOG}" 2>&1 > /dev/null || exit 1
 	done
-
-	service postgresql stop
 
 	return 0
 }
