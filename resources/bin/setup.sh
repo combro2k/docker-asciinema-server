@@ -108,6 +108,8 @@ pre_install() {
 		gem install bundler
 	fi
 
+	service postgresql start
+
 	return 0
 }
 
@@ -232,6 +234,10 @@ build() {
 		echo "Running build task ${task}..."
 		${task} | tee -a "${INSTALL_LOG}" 2>&1 > /dev/null || exit 1
 	done
+
+	service postgresql stop
+
+	return 0
 }
 
 if [ $# -eq 0 ]
