@@ -117,7 +117,8 @@ install_asciinema() {
 	then
 		if [ "${CUR_UID}" -eq 0 ]
 		then
-			return $(sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]})
+			sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]}
+			return $?
 		else
 			echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
 			return 1
@@ -146,7 +147,8 @@ configure_asciinema() {
 	then
 		if [ "${CUR_UID}" -eq 0 ]
 		then
-			return $(sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]})
+			sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]}
+			return $?
 		else
 			echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
 			return 1
