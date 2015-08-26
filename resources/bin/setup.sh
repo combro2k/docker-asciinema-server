@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -TEa
-
 trap '{ echo -e "error ${?}\nthe command executing at the time of the error was\n${BASH_COMMAND}\non line ${BASH_LINENO[0]}" && tail -n 10 ${INSTALL_LOG} && exit $? }' ERR
 
 DEBIAN_FRONTEND="noninteractive"
@@ -104,7 +102,7 @@ pre_install() {
 			source /usr/local/rvm/scripts/rvm
 		fi
 
-		rvm install 2.1.7 && rvm --default use 2.1.7 && rvm alias create default 2.1.7
+		rvm install 2.1.7 && rvm --default use 2.1.7 
 		echo 'gem: --no-document' | tee ${APP_HOME}/.gemrc
 		gem install bundler
 	fi
