@@ -203,8 +203,8 @@ configure_asciinema() {
 	then
 		pushd "${ASCIINEMA_SERVER}"
 		bundle install
-		createdb -E unicode --template=template0
-		bundle exec rake --silent --no-deprecation-warnings db:setup
+		#createdb -E unicode --template=template0
+		#bundle exec rake --silent --no-deprecation-warnings db:setup
 		mkdir -p "./tmp"
 		touch "./tmp/restart.txt"
 		popd
