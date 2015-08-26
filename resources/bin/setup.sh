@@ -82,6 +82,7 @@ pre_install() {
 		rm -fr "${TMP_DIR}"
 	fi
 
+        service postgresql start
 	if [ ! -d "${APP_USER}" ]
 	then
 		echo "Creating user ${APP_USER}..."
@@ -91,6 +92,7 @@ pre_install() {
 		echo "Creating ${APP_USER} as superuser for postgresql"
 		sudo -u postgres -H createuser asciinema -s
 	fi
+        service postgresql stop
 
 	if [ ! -d "/usr/local/rvm" ]
 	then
@@ -107,8 +109,6 @@ pre_install() {
 		echo 'gem: --no-document' | tee ${APP_HOME}/.gemrc
 		gem install bundler
 	fi
-
-	service postgresql start
 
 	return 0
 }
