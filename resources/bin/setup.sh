@@ -44,7 +44,7 @@ export PACKAGES=(
 	'make'
 	'patch'
 	'phantomjs'
-        'libpq-dev'
+    'libpq-dev'
 	'sqlite3'
 	'sudo'
 	'zlib1g-dev'
@@ -101,7 +101,7 @@ install_dependencies() {
 		fi
 
 		rvm install 2.1.7 && rvm use 2.1.7
-		echo 'gem: --no-document' | tee ${APP_HOME}/.gemrc 
+		echo 'gem: --no-document' | tee ${APP_HOME}/.gemrc
 		gem install bundler
 	fi
 
@@ -205,6 +205,6 @@ then
 else
 	for a in ${@}
 	do
-		${a}
+		${a} || exit 1
 	done
 fi
