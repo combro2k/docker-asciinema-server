@@ -226,7 +226,6 @@ build() {
 
 	tasks=(
 		'pre_install'
-		'install_asciinema'
 	)
 
 	for task in ${tasks[@]}
