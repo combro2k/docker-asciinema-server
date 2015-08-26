@@ -11,4 +11,4 @@ RUN chmod +x /usr/local/bin/* && /bin/bash --login -c '/usr/local/bin/setup.sh b
 
 ADD resources/etc/ /etc/
 
-CMD ['/usr/bin/supervisord', '-c' '/etc/supervisor/supervisord.conf']
+CMD /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
