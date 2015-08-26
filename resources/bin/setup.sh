@@ -117,7 +117,7 @@ install_asciinema() {
 	then
 		if [ "${CUR_UID}" -eq 0 ]
 		then
-			sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]}
+			sudo -E -H -u "${APP_USER}" ${0} ${FUNCNAME[0]}
 			return $?
 		else
 			echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
@@ -147,7 +147,7 @@ configure_asciinema() {
 	then
 		if [ "${CUR_UID}" -eq 0 ]
 		then
-			sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]}
+			sudo -E -H -u "${APP_USER}" ${0} ${FUNCNAME[0]}
 			return $?
 		else
 			echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
@@ -202,12 +202,11 @@ build() {
 	tasks=(
 		'pre_install'
 		'install_asciinema'
-		'configure_asciinema'
 	)
 
 	for task in ${tasks[@]}
 	do
-		echo "Running ${task}..."
+		echo "Running build task ${task}..."
 		${task} | tee -a "${INSTALL_LOG}" 2>&1 > /dev/null || exit 1
 	done
 }
