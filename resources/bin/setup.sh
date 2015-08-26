@@ -73,8 +73,8 @@ pre_install() {
 	then
 		echo "Compiling libtsm-3"
 		mkdir -p "${TMP_DIR}"
-		curl --silent -L http://freedesktop.org/software/kmscon/releases/libtsm-3.tar.xz | tar Jx --strip-components=1 -C ${TMP_DIR}
 		pushd "${TMP_DIR}"
+		curl --silent -L http://freedesktop.org/software/kmscon/releases/libtsm-3.tar.xz | tar Jx --strip-components=1
 		[ ! -f "./configure" ] && NOCONFIGURE=1 ./autogen.sh
 		./configure --prefix=/usr/local && make && make install
 		popd
