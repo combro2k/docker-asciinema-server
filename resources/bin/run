@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
-[[ "${USER}" != "${APP_USER}" ]] && echo "Need to be ${APP_USER} to run this command" && exit 1
+if [[ "$(id -un)" != "${APP_USER}" ]]
+then
+    echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
+    return 1
+fi
 
 /usr/local/bin/install.sh configure_asciinema
+
+start

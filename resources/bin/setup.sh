@@ -1,24 +1,14 @@
 #!/bin/bash
 
-e () {
-	errcode="$?"
-	echo "error $errorcode"
-	echo "the command executing at the time of the error was"
-	echo "$BASH_COMMAND"
-#	echo "on line ${BASH_LINENO[0]}"
-	exit 1
-}
+set -TEa
 
-trap e ERR
+trap '{ echo -e "error ${?}\nthe command executing at the time of the error was\n${BASH_COMMAND}\non line ${BASH_LINENO[0]}" && tail -n 10 ${INSTALL_LOG} && exit $? }' ERR
 
-export CUR_USER="$(id -un)"
-export CUR_UID="$(id -u)"
-export DEBIAN_FRONTEND="noninteractive"
-export APP_USER="asciinema"
-export APP_HOME="/home/${APP_USER}"
-export ASCIINEMA_SERVER="${APP_HOME}/asciinema-server"
-export TMP_DIR="$(mktemp -u -d -t tsmXXXXXX) "
-export PACKAGES=(
+CUR_USER="$(id -un)"
+CUR_UID="$(id -u)"
+DEBIAN_FRONTEND="noninteractive"
+TMP_DIR="$(mktemp -u -d -t tsmXXXXXX) "
+PACKAGES=(
 	'autoconf'
 	'automake'
 	'bison'
@@ -51,11 +41,11 @@ export PACKAGES=(
 )
 
 # install all dependencies
-install_dependencies() {
+pre_install() {
 	if [ "${CUR_UID}" -ne 0 ]
 	then
 		echo "Need to be root to run ${FUNCNAME[0]} (running as ${CUR_USER})"
-		exit 1
+		return 1
 	fi
 
 	if [ ! -f "/usr/bin/add-apt-repository" ]
@@ -73,7 +63,7 @@ install_dependencies() {
 	then
 		echo "Compiling libtsm-3"
 		mkdir -p "${TMP_DIR}"
-		curl -sSL http://freedesktop.org/software/kmscon/releases/libtsm-3.tar.xz | tar Jx --strip-components=1 -C ${TMP_DIR}
+		curl --silent -L http://freedesktop.org/software/kmscon/releases/libtsm-3.tar.xz | tar Jx --strip-components=1 -C ${TMP_DIR}
 		pushd "${TMP_DIR}"
 		[ ! -f "./configure" ] && NOCONFIGURE=1 ./autogen.sh
 		./configure --prefix=/usr/local && make && make install
@@ -93,7 +83,7 @@ install_dependencies() {
 	then
 		echo "Installing RVM ruby..."
 		gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
-		curl -sSL https://get.rvm.io | bash
+		curl --silent -L https://get.rvm.io | bash
 
 		if [ -f "/etc/profile.d/rvm.sh" ]
 		then
@@ -112,7 +102,7 @@ chown_asciinema() {
 	if [ "${CUR_UID}" -ne 0 ]
 	then
 		echo "Need to be root to run ${FUNCNAME[0]} (running as ${CUR_USER})"
-		exit 1
+		return 1
 	fi
 
 	echo "Setting the correct user rights on ${ASCIICEMA_SERVER}..."
@@ -125,17 +115,25 @@ chown_asciinema() {
 install_asciinema() {
 	if [[ "${CUR_USER}" != "${APP_USER}" ]]
 	then
-		echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
-		exit 1
+		if [ "${CUR_UID}" -eq 0 ]
+		then
+			return $(sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]})
+		else
+			echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
+			return 1
+		fi
 	fi
 
-	if [ ! -d "${ASCIICEMA_SERVER}" ]
+	if [ ! -d "${ASCIINEMA_SERVER}" ]
 	then
-		mkdir -p "${ASCIINEMA_SERVER}"
-		pushd "${ASCIINEMA_SERVER}"
-		echo "Checking out asciinema.org..."
-		curl -sSL https://github.com/asciinema/asciinema.org/archive/master.tar.gz | tar zx --strip-components=1
-		popd
+		echo "Clone asciinema.org..."
+		git clone git@github.com:asciinema/asciinema.org.git "${ASCIINEMA_SERVER}"
+    else
+        pushd "${ASCIINEMA_SERVER}"
+        git stash
+        git pull
+        git stash apply
+        popd
 	fi
 
 	configure_asciinema
@@ -146,8 +144,13 @@ install_asciinema() {
 configure_asciinema() {
 	if [[ "${CUR_USER}" != "${APP_USER}" ]]
 	then
-		echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
-		exit 1
+		if [ "${CUR_UID}" -eq 0 ]
+		then
+			return $(sudo -H -u "${APP_USER}" ${0} ${FUNCNAME[0]})
+		else
+			echo "Need to be ${APP_USER} to run ${FUNCNAME[0]} (running as ${CUR_USER})"
+			return 1
+		fi
 	fi
 
 	if [ ! -d "/data" ] || [ ! -d "/data/config" ]
@@ -157,17 +160,17 @@ configure_asciinema() {
 
 	if [ ! -e "/data/config/database.yml" ]
 	then
-		echo "Copying base skeleton" && cp "${ASCIICEMA_SERVER}/config/database.yml.example" "/data/config/database.yml"
+		echo "Copying base skeleton" && cp "${ASCIINEMA_SERVER}/config/database.yml.example" "/data/config/database.yml"
 	fi
 
-	if [ ! -L "${ASCIICEMA_SERVER}/config/database.yml" ]
+	if [ ! -L "${ASCIINEMA_SERVER}/config/database.yml" ]
 	then
-		ln -fs "/data/config/database.yml" "${ASCIICEMA_SERVER}/config/database.yml"
+		ln -fs "/data/config/database.yml" "${ASCIINEMA_SERVER}/config/database.yml"
 	fi
 
-	if [ "$(ls -A "${ASCIICEMA_SERVER}/log/*")" ]
+	if [ "$(ls -A "${ASCIINEMA_SERVER}/log/*")" ]
 	then
-		rm -f "${ASCIICEMA_SERVER}/log/*"
+		rm -f "${ASCIINEMA_SERVER}/log/*"
 	fi
 
 	if [ -f "/etc/profile.d/rvm.sh" ]
@@ -189,8 +192,22 @@ configure_asciinema() {
 }
 
 build() {
-	install_dependencies
-	sudo -H -u "${APP_USER}" ${0} install_asciinema configure_asciinema
+	if [ ! -f "${INSTALL_LOG}" ]
+	then
+		touch "${INSTALL_LOG}"
+	fi
+
+	tasks=(
+		'pre_install'
+		'install_asciinema'
+		'configure_asciinema'
+	)
+
+	for task in ${tasks[@]}
+	do
+		echo "Running ${task}..."
+		${task} | tee -a "${INSTALL_LOG}" 2>&1 > /dev/null || exit 1
+	done
 }
 
 if [ $# -eq 0 ]
@@ -203,8 +220,10 @@ then
 
 	exit 1
 else
-	for a in ${@}
+	for task in ${@}
 	do
-		${a} || exit 1
+		${task} || exit 1
 	done
 fi
+
+exit 0
