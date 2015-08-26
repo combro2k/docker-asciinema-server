@@ -55,7 +55,7 @@ pre_install() {
 	fi
 
 	add-apt-repository -y ppa:tanguy-patte/phantomjs
-	apt-get update
+	apt-get update -yq
 
 	apt-get install -yq ${PACKAGES[@]}
 
@@ -82,7 +82,7 @@ pre_install() {
 	if [ ! -d "/usr/local/rvm" ]
 	then
 		echo "Installing RVM ruby..."
-		gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3
+		gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3 2>&1 > /dev/null
 		curl --silent -L https://get.rvm.io | bash
 
 		if [ -f "/etc/profile.d/rvm.sh" ]
@@ -128,7 +128,7 @@ install_asciinema() {
 	if [ ! -d "${ASCIINEMA_SERVER}" ]
 	then
 		echo "Clone asciinema.org..."
-		git clone git@github.com:asciinema/asciinema.org.git "${ASCIINEMA_SERVER}"
+		git clone https://github.com/asciinema/asciinema.org.git "${ASCIINEMA_SERVER}"
     else
         pushd "${ASCIINEMA_SERVER}"
         git stash
