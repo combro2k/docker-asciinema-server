@@ -6,4 +6,4 @@ VOLUME ["/data"]
 ADD resources/bin/ /usr/local/bin/
 RUN chmod +x /usr/local/bin/* && /bin/bash --login -c '/usr/local/bin/setup.sh build'
 ADD resources/etc/ /etc/
-CMD ["/usr/bin/supervisord", "-c" "/etc/supervisor/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
