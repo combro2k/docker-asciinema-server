@@ -91,22 +91,6 @@ pre_install() {
 	fi
 	service postgresql stop
 
-	if [ ! -d "/usr/local/rvm" ]
-	then
-		echo "Installing RVM ruby..."
-		gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3 2>&1 > /dev/null
-		curl --silent -L https://get.rvm.io | bash
-
-		if [ -f "/usr/local/rvm/scripts/rvm" ]
-		then
-			source /usr/local/rvm/scripts/rvm
-		fi
-
-		rvm install 2.1.7 && rvm --default use 2.1.7 
-		echo 'gem: --no-document' | tee ${APP_HOME}/.gemrc
-		gem install bundler
-	fi
-
 	return 0
 }
 
