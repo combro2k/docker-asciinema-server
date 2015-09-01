@@ -14,38 +14,61 @@ CUR_USER="$(id -un)"
 CUR_UID="$(id -u)"
 
 PACKAGES=(
-	'autoconf'
-	'automake'
-	'bison'
-	'curl'
-	'g++'
-	'gawk'
-	'gcc'
-	'git'
-	'libc6-dev'
-	'libffi-dev'
-	'libgdbm-dev'
-	'libncurses5-dev'
-	'libreadline6-dev'
-	'libsqlite3-dev'
-	'libssl-dev'
-	'libtool'
-	'libgmp-dev'
-	'libpq-dev'
-	'libjson-c-dev'
-	'libxml2-dev'
-	'libxslt-dev'
-	'libyaml-dev'
-	'make'
-	'nodejs'
-	'patch'
-	'phantomjs'
-	'postgresql'
-	'rsyslog'
-	'sqlite3'
-	'sudo'
-	'supervisor'
-	'zlib1g-dev'
+    'build-essential'
+    'g++'
+    'flex'
+    'bison'
+    'gperf'
+    'perl'
+    'libsqlite3-dev'
+    'libfontconfig1-dev'
+    'libicu-dev'
+    'libfreetype6'
+    'libssl-dev'
+    'libpng-dev'
+    'libjpeg-dev'
+    'python'
+    'libx11-dev'
+    'libxext-dev'
+    'autoconf'
+    'automake'
+    'bison'
+    'curl'
+    'g++'
+    'gawk'
+    'gcc'
+    'git'
+    'libc6-dev'
+    'libffi-dev'
+    'libgdbm-dev'
+    'libncurses5-dev'
+    'libreadline6-dev'
+    'libsqlite3-dev'
+    'libssl-dev'
+    'libtool'
+    'libgmp-dev'
+    'libpq-dev'
+    'libjson-c-dev'
+    'libxml2-dev'
+    'libxslt-dev'
+    'libyaml-dev'
+    'make'
+    'nodejs'
+    'patch'
+    'postgresql'
+    'rsyslog'
+    'sqlite3'
+    'sudo'
+    'supervisor'
+    'zlib1g-dev'
+    'build-essential'
+    'chrpath'
+    'libssl-dev'
+    'libxft-dev'
+    'libfreetype6'
+    'libfreetype6-dev'
+    'libfontconfig1'
+    'libfontconfig1-dev'
 )
 
 # install all dependencies
@@ -56,19 +79,13 @@ pre_install() {
 		return 1
 	fi
 
-	if [ ! -f "/usr/bin/add-apt-repository" ]
-	then
-		apt-get update
-		apt-get install -yq python-software-properties software-properties-common
-	fi
-
-	add-apt-repository -y ppa:tanguy-patte/phantomjs
-	apt-get update -yq
+	apt-get update 
 	apt-get install -yq ${PACKAGES[@]}
 
 	if [ ! -f "/usr/local/lib/libtsm.a" ]
 	then
 		echo "Compiling libtsm-3"
+
 		mkdir -p "/tmp/libtsm"
 		pushd "/tmp/libtsm"
 		curl --silent -L http://freedesktop.org/software/kmscon/releases/libtsm-3.tar.xz | tar Jx --strip-components=1
@@ -79,16 +96,32 @@ pre_install() {
 		rm -fr "/tmp/libtsm"
 	fi
 
+	if [ ! -d "/opt/phantomjs" ]
+	then
+        echo "Compiling phantomjs"
+
+        git clone git://github.com/ariya/phantomjs.git /opt/phantomjs
+        pushd "/opt/phantomjs"
+        git checkout 2.0
+        ./build.sh --confirm
+        ln -s /opt/phantomjs/bin/phantomjs /usr/bin/phantomjs
+        popd
+    fi
+
+
 	service postgresql start
+
 	if [ ! -d "${APP_USER}" ]
 	then
 		echo "Creating user ${APP_USER}..."
+
 		useradd -d "${APP_HOME}" -m -s "/bin/bash" "${APP_USER}"
 		echo "${APP_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${APP_USER}
 
 		echo "Creating ${APP_USER} as superuser for postgresql"
 		sudo -u postgres -H createuser asciinema -s
 	fi
+
 	service postgresql stop
 
 	return 0
@@ -124,6 +157,7 @@ install_asciinema() {
 	if [ ! -d "${ASCIINEMA_SERVER}" ]
 	then
 		echo "Clone asciinema.org..."
+
 		git clone https://github.com/asciinema/asciinema.org.git "${ASCIINEMA_SERVER}"
 	else
 		pushd "${ASCIINEMA_SERVER}"
@@ -178,11 +212,6 @@ configure_asciinema() {
 		rm -f "${ASCIINEMA_SERVER}/log/*"
 	fi
 
-	if [ -f "/usr/local/rvm/scripts/rvm" ]
-	then
-		source /usr/local/rvm/scripts/rvm
-	fi
-
 	if [ -d "${ASCIINEMA_SERVER}" ]
 	then
 		pushd "${ASCIINEMA_SERVER}"
@@ -211,7 +240,7 @@ build() {
 	for task in ${tasks[@]}
 	do
 		echo "Running build task ${task}..."
-		${task} | tee -a "${INSTALL_LOG}" 2>&1 > /dev/null || exit 1
+		${task} | tee -a "${INSTALL_LOG}" > /dev/null 2>&1 || exit 1
 	done
 
 	return 0
