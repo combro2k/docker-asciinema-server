@@ -108,10 +108,11 @@ pre_install() {
         popd
     fi
 
+	return 0
+}
 
-	service postgresql start
-
-	if [ ! -d "${APP_USER}" ]
+create_users() {
+    if [ ! -d "${APP_USER}" ]
 	then
 		echo "Creating user ${APP_USER}..."
 
@@ -121,8 +122,6 @@ pre_install() {
 		echo "Creating ${APP_USER} as superuser for postgresql"
 		sudo -u postgres -H createuser asciinema -s
 	fi
-
-	service postgresql stop
 
 	return 0
 }
@@ -136,6 +135,18 @@ chown_asciinema() {
 
 	echo "Setting the correct user rights on ${ASCIICEMA_SERVER}..."
 	chown -R "${APP_USER}:${APP_USER}" "${ASCIICEMA_SERVER}" /data
+
+	return 0
+}
+
+start_postgres() {
+	service postgresql start
+
+	return 0
+}
+
+stop_postgres() {
+	service postgresql stop
 
 	return 0
 }
@@ -216,14 +227,22 @@ configure_asciinema() {
 	then
 		pushd "${ASCIINEMA_SERVER}"
 		bundle install
-		#createdb -E unicode --template=template0
-		#bundle exec rake --silent --no-deprecation-warnings db:setup
+		createdb -E unicode --template=template0
+		bundle exec rake --silent --no-deprecation-warnings db:setup
 		mkdir -p "./tmp"
 		touch "./tmp/restart.txt"
 		popd
 	fi
 
 	return 0
+}
+
+load_rvm()
+{
+    if [ -f "/etc/profile.d/rvm.sh" ]
+    then
+        source /etc/profile.d/rvm.sh
+    fi
 }
 
 build() {
@@ -234,7 +253,10 @@ build() {
 
 	tasks=(
 		'pre_install'
+		'start_postgres'
+		'create_users'
 		'install_asciinema'
+		'stop_postgres'
 	)
 
 	for task in ${tasks[@]}
@@ -256,6 +278,11 @@ then
 
 	exit 1
 else
+    if [ -z "${rvm_prefix}" ]
+    then
+        load_rvm
+    fi
+
 	for task in ${@}
 	do
 		${task} || exit 1
