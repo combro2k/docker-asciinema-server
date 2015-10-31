@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+/usr/local/bin/setup.sh configure_asciinema
+
+exec /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
