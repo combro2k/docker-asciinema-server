@@ -5,9 +5,7 @@ trap '{ echo -e "error ${?}\nthe command executing at the time of the error was\
 DEBIAN_FRONTEND="noninteractive"
 INSTALL_LOG="/var/log/build.log"
 
-APP_USER="asciinema"
-APP_HOME="/home/${APP_USER}"
-ASCIINEMA_SERVER="/${APP_HOME}/server"
+ASCIINEMA_SERVER="${APP_HOME}/server"
 RAILS_ENV="production"
 
 CUR_USER="$(id -un)"
@@ -98,30 +96,17 @@ pre_install() {
 
 	if [ ! -d "/opt/phantomjs" ]
 	then
-        echo "Compiling phantomjs"
+		echo "Compiling phantomjs"
 
-        git clone git://github.com/ariya/phantomjs.git /opt/phantomjs
-        pushd "/opt/phantomjs"
-        git checkout 2.0
-        ./build.sh --confirm
-        ln -s /opt/phantomjs/bin/phantomjs /usr/bin/phantomjs
-        popd
-    fi
-
-	return 0
-}
-
-create_users() {
-    if [ ! -d "${APP_USER}" ]
-	then
-		echo "Creating user ${APP_USER}..."
-
-		useradd -d "${APP_HOME}" -m -s "/bin/bash" "${APP_USER}"
-		echo "${APP_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${APP_USER}
-
-		echo "Creating ${APP_USER} as superuser for postgresql"
-		sudo -u postgres -H createuser asciinema -s
+		git clone git://github.com/ariya/phantomjs.git /opt/phantomjs
+		pushd "/opt/phantomjs"
+		git checkout 2.0
+		./build.sh --confirm
+		ln -s /opt/phantomjs/bin/phantomjs /usr/bin/phantomjs
+		popd
 	fi
+
+	chmod +x /usr/local/bin/*
 
 	return 0
 }
@@ -165,6 +150,8 @@ install_asciinema() {
 		fi
 	fi
 
+	rvm use 2.1.5
+
 	if [ ! -d "${ASCIINEMA_SERVER}" ]
 	then
 		echo "Clone asciinema.org..."
@@ -193,7 +180,6 @@ configure_asciinema() {
 			return 1
 		fi
 	fi
-
 
 	if [ ! -d "/data" ] || [ ! -d "/data/config" ]
 	then
@@ -239,54 +225,72 @@ configure_asciinema() {
 
 load_rvm()
 {
-    if [ -f "/etc/profile.d/rvm.sh" ]
+    if [ -f "${APP_HOME}/.rvm/scripts/rvm" ]
     then
-        source /etc/profile.d/rvm.sh
+        source ${APP_HOME}/.rvm/scripts/rvm
+    else
+	echo "Could not load RVM"
+	return 1
     fi
+
+    return 0
 }
 
-build() {
-	if [ ! -f "${INSTALL_LOG}" ]
+post_install() {
+	if [ "${CUR_UID}" -ne 0 ]
 	then
-		touch "${INSTALL_LOG}"
+		echo "Need to be root to run ${FUNCNAME[0]} (running as ${CUR_USER})"
+		return 1
 	fi
 
-	tasks=(
-		'pre_install'
-		'start_postgres'
-		'create_users'
-		'install_asciinema'
-		'stop_postgres'
-	)
-
-	for task in ${tasks[@]}
-	do
-		echo "Running build task ${task}..."
-		${task} | tee -a "${INSTALL_LOG}" > /dev/null 2>&1 || exit 1
-	done
+	apt-get autoremove 2>&1 || return 1
+	apt-get autoclean 2>&1 || return 1
+	rm -fr /var/lib/apt 2>&1 || return 1
 
 	return 0
 }
 
+
+build() {
+	tasks=(
+		'pre_install'
+		'start_postgres'
+		'install_asciinema'
+		'stop_postgres'
+		'post_install'
+	)
+
+	for task in ${tasks[@]}
+    	do
+		echo "Running task ${task}..."
+		if ! ${task} 2>&1 | tee -a ${INSTALL_LOG}; then
+		    tail ${INSTALL_LOG}
+	    	    exit 1
+		fi
+        done		
+}
+
 if [ $# -eq 0 ]
 then
-	echo "No parameters given! (${@})"
-	echo "Available functions:"
-	echo
-
-	compgen -A function
+	echo "Available function(s):"
+	echo $(compgen -A function)
 
 	exit 1
-else
-    if [ -z "${rvm_prefix}" ]
-    then
-        load_rvm
-    fi
-
-	for task in ${@}
-	do
-		${task} || exit 1
-	done
 fi
+
+eval load_rvm
+
+for task in ${@}
+do
+	if ! declare -F ${task} > /dev/null; then
+		echo "${task} does not exist fail..."
+		exit 1
+	fi
+
+	echo "Running ${task}..."
+	if ! ${task} 2>&1; then
+		exit 1
+	fi
+done
 
 exit 0
